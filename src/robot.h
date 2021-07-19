@@ -1,4 +1,4 @@
-﻿#ifndef ROBOT_H_
+#ifndef ROBOT_H_
 #define ROBOT_H_
 
 #include <memory>
@@ -6,30 +6,8 @@
 
 namespace robot
 {
-    class SetMaxToq :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-        auto virtual collectNrt()->void;
 
-        virtual ~SetMaxToq();
-        explicit SetMaxToq(const std::string &name = "set_max_toq");
-        ARIS_REGISTER_TYPE(SetMaxToq);
-    };
-
-    class DogReadJoint :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogReadJoint();
-        explicit DogReadJoint(const std::string &name = "dog_read_joint");
-        ARIS_REGISTER_TYPE(DogReadJoint);
-    };
-
-    class DogMoveJoint :public aris::plan::Plan
+    class DogMoveJoint :public aris::core::CloneObject<DogMoveJoint,aris::plan::Plan>
     {
     public:
         auto virtual prepareNrt()->void;
@@ -38,179 +16,23 @@ namespace robot
 
         virtual ~DogMoveJoint();
         explicit DogMoveJoint(const std::string &name = "dog_move_joint");
-        ARIS_REGISTER_TYPE(DogMoveJoint);
+
     private:
         double dir_;
     };
+
+
+    class MoveJS : public aris::core::CloneObject<MoveJS, aris::plan::Plan>
+      {
+      public:
+          auto virtual prepareNrt()->void;
+          auto virtual executeRT()->int;
+          auto virtual collectNrt()->void;
+
+          explicit MoveJS(const std::string &name = "MoveJS_plan");
+
+      };
     
-    class DogHome :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogHome();
-        explicit DogHome(const std::string &name = "dog_home");
-        ARIS_REGISTER_TYPE(DogHome);
-    };
-
-    class DogSwitchPrePose :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogSwitchPrePose();
-        explicit DogSwitchPrePose(const std::string& name = "dog_switchpose");
-        ARIS_REGISTER_TYPE(DogSwitchPrePose);
-    private:
-        std::string prepose_;
-    };
-
-    class DogPrepare :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogPrepare();
-        explicit DogPrepare(const std::string &name = "dog_prepare");
-        ARIS_REGISTER_TYPE(DogPrepare);
-    private:
-        std::string prepose_;
-    };
-
-
-
-    class DogUpDown :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogUpDown();
-        explicit DogUpDown(const std::string& name = "dog_updown");
-        ARIS_REGISTER_TYPE(DogUpDown);
-    private:
-        double distance_;
-    };
-
-    class DogTaBu :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogTaBu();
-        explicit DogTaBu(const std::string &name = "dog_tabu");
-        ARIS_REGISTER_TYPE(DogTaBu);
-    private:
-        double step_;
-        std::string prepose_;
-    };
-
-    class DogForward :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogForward();
-        explicit DogForward(const std::string &name = "dog_forward");
-        ARIS_REGISTER_TYPE(DogForward);
-    private:
-        double step_;
-        std::string gait_;
-        std::string prepose_;
-    };
-
-    class DogBack :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogBack();
-        explicit DogBack(const std::string& name = "dog_back");
-        ARIS_REGISTER_TYPE(DogBack);
-    private:
-        double step_;
-        std::string gait_;
-        std::string prepose_;
-    };
-
-    class DogLeft :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogLeft();
-        explicit DogLeft(const std::string& name = "dog_left");
-        ARIS_REGISTER_TYPE(DogLeft);
-    private:
-        double step_;
-        std::string gait_;
-        std::string prepose_;
-    };
-
-    class DogRight :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogRight();
-        explicit DogRight(const std::string& name = "dog_right");
-        ARIS_REGISTER_TYPE(DogRight);
-    private:
-        double step_;
-        std::string gait_;
-        std::string prepose_;
-    };
-
-    class DogPitch :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogPitch();
-        explicit DogPitch(const std::string& name = "dog_pitch");
-        ARIS_REGISTER_TYPE(DogPitch);
-    private:
-        double turn_angle_;
-    };
-
-
-    class DogRoll :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogRoll();
-        explicit DogRoll(const std::string& name = "dog_roll");
-        ARIS_REGISTER_TYPE(DogRoll);
-    private:
-        double turn_angle_;
-    };
-
-
-    class DogYaw :public aris::plan::Plan
-    {
-    public:
-        auto virtual prepareNrt()->void;
-        auto virtual executeRT()->int;
-
-        virtual ~DogYaw();
-        explicit DogYaw(const std::string& name = "dog_yaw");
-        ARIS_REGISTER_TYPE(DogYaw);
-    private:
-        double turn_angle_;
-    };
-
-
 
     auto createControllerQuadruped()->std::unique_ptr<aris::control::Controller>;
     auto createPlanQuadruped()->std::unique_ptr<aris::plan::PlanRoot>;

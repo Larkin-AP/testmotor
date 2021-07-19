@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.12)
 
-project(quad_rbt)
+project(testmotor)
 
 # aris use c++ 17 standard
 set(CMAKE_CXX_STANDARD 17)
@@ -16,12 +16,12 @@ endif(WIN32)
 include_directories(${aris_INCLUDE_DIRS})
 
 
-add_executable(quad_rbt src/main.cpp src/robot.cpp src/robot.h src/plan.cpp src/plan.h src/kinematics.cpp src/kinematics.h )
+add_executable(testmotor src/main.cpp src/robot.cpp src/robot.h src/plan.cpp src/plan.h )
 
 if(UNIX)
-    target_link_libraries(quad_rbt ${aris_LIBRARIES} atomic)
+    target_link_libraries(testmotor ${aris_LIBRARIES} atomic)
 endif(UNIX)
 IF(WIN32)
-    target_link_libraries(quad_rbt ${aris_LIBRARIES})
+    target_link_libraries(lesson ${aris_LIBRARIES})
 endif(WIN32)
 
