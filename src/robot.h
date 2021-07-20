@@ -7,15 +7,15 @@
 namespace robot
 {
 
-    class DogMoveJoint :public aris::core::CloneObject<DogMoveJoint,aris::plan::Plan>
+    class MotorDrive :public aris::core::CloneObject<MotorDrive,aris::plan::Plan>
     {
     public:
         auto virtual prepareNrt()->void;
         auto virtual executeRT()->int;
         auto virtual collectNrt()->void;
 
-        virtual ~DogMoveJoint();
-        explicit DogMoveJoint(const std::string &name = "dog_move_joint");
+        virtual ~MotorDrive();
+        explicit MotorDrive(const std::string &name = "motor_drive");
 
     private:
         double dir_;
@@ -34,8 +34,8 @@ namespace robot
       };
     
 
-    auto createControllerQuadruped()->std::unique_ptr<aris::control::Controller>;
-    auto createPlanQuadruped()->std::unique_ptr<aris::plan::PlanRoot>;
+    auto createControllerMotor()->std::unique_ptr<aris::control::Controller>;
+    auto createPlanMotor()->std::unique_ptr<aris::plan::PlanRoot>;
 }
 
 #endif

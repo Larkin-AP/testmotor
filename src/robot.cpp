@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string>
 #include <bitset>
-
 #include "robot.h"
 #include"plan.h"
 
@@ -134,7 +133,7 @@ MoveJS::MoveJS(const std::string &name)
 
 
 //轴空间移动
-auto DogMoveJoint::prepareNrt()->void
+auto MotorDrive::prepareNrt()->void
 {
     dir_ = doubleParam("direction");
 
@@ -143,7 +142,7 @@ auto DogMoveJoint::prepareNrt()->void
             aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
 
 }
-auto DogMoveJoint::executeRT()->int
+auto MotorDrive::executeRT()->int
 {
     static double begin_angle[18];
 
@@ -151,26 +150,13 @@ auto DogMoveJoint::executeRT()->int
     {
 
         begin_angle[0] = controller()->motionPool()[0].targetPos();
-//        begin_angle[1] = controller()->motionPool()[1].targetPos();
-//        begin_angle[2] = controller()->motionPool()[2].targetPos();
-//        begin_angle[3] = controller()->motionPool()[3].targetPos();
-//        begin_angle[4] = controller()->motionPool()[4].targetPos();
-//        begin_angle[5] = controller()->motionPool()[5].targetPos();
-//        begin_angle[6] = controller()->motionPool()[6].targetPos();
-//        begin_angle[7] = controller()->motionPool()[7].targetPos();
-//        begin_angle[8] = controller()->motionPool()[8].targetPos();
-//        begin_angle[9] = controller()->motionPool()[9].targetPos();
-//        begin_angle[10] = controller()->motionPool()[10].targetPos();
-//        begin_angle[11] = controller()->motionPool()[11].targetPos();
-//        begin_angle[12] = controller()->motionPool()[12].targetPos();
-//        begin_angle[13] = controller()->motionPool()[13].targetPos();
-//        begin_angle[14] = controller()->motionPool()[14].targetPos();
-//        begin_angle[15] = controller()->motionPool()[15].targetPos();
-//        begin_angle[16] = controller()->motionPool()[16].targetPos();
-//        begin_angle[17] = controller()->motionPool()[17].targetPos();
-    //    std::cout<<begin_angle[0]<<std::endl;
-      //  begin_angle[1] = controller()->motionPool()[1].targetPos();
-     //   std::cout<<begin_angle[1]<<std::endl;
+
+
+
+//        for(int i = 0; i<18;++i){
+//            begin_angle[i] = controller()->motionPool()[i].targetPos();
+//        }
+
         this->master()->logFileRawName("TestMotor");//建立文件夹
     }
 //    std::int32_t digits;
@@ -183,8 +169,7 @@ auto DogMoveJoint::executeRT()->int
 //  梯形曲线
     TCurve s1(1,1);
     s1.getCurveParam();
-    double angle0 = begin_angle[0] + dir_ * 1 * s1.getTCurve(count());
-
+//    double angle0 = begin_angle[0] + dir_ * 1 * s1.getTCurve(count());
 //    lout() << angle0 << std::endl;//将电机角度输出到文件
 
 //    controller()->motionPool()[0].setTargetPos(angle0);
@@ -198,43 +183,10 @@ auto DogMoveJoint::executeRT()->int
 //      Sin曲线
 //    double angle0 = begin_angle[0] + dir_ * 10*sin(PI * count()/15000.0);
 //    double angle0 = begin_angle[0] + dir_ * count() * 0.001;
-//    double angle0 = begin_angle[0] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle1 = begin_angle[1] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle2 = begin_angle[2] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle3 = begin_angle[3] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle4 = begin_angle[4] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle5 = begin_angle[5] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle6 = begin_angle[6] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle7 = begin_angle[7] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle8 = begin_angle[8] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle9 = begin_angle[9] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle10 = begin_angle[10] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle11 = begin_angle[11] + dir_ * sin(PI * count()/2/1000.0);
-//    double angle12 = begin_angle[12] + dir_ * 15*sin(PI * count()/2/1000.0);
-//    double angle13 = begin_angle[13] + dir_ * 15*sin(PI * count()/2/1000.0);
-//    double angle14 = begin_angle[14] + dir_ * 15*sin(PI * count()/2/1000.0);
-//    double angle15 = begin_angle[15] + dir_ * 15*sin(PI * count()/2/1000.0);
-//    double angle16 = begin_angle[16] + dir_ * 15*sin(PI * count()/2/1000.0);
-//    double angle17 = begin_angle[17] + dir_ * 15*sin(PI * count()/2/1000.0);
-//    double angle1 = begin_angle[1] + dir_ * sin(PI * count()/2/1000.0);
+    double angle0 = begin_angle[0] + dir_ * sin(PI * count()/2/1000.0);
+
     controller()->motionPool()[0].setTargetPos(angle0);
-//    controller()->motionPool()[1].setTargetPos(angle1);
-//    controller()->motionPool()[2].setTargetPos(angle2);
-//    controller()->motionPool()[3].setTargetPos(angle3);
-//    controller()->motionPool()[4].setTargetPos(angle4);
-//    controller()->motionPool()[5].setTargetPos(angle5);
-//    controller()->motionPool()[6].setTargetPos(angle6);
-//    controller()->motionPool()[7].setTargetPos(angle7);
-//    controller()->motionPool()[8].setTargetPos(angle8);
-//    controller()->motionPool()[9].setTargetPos(angle9);
-//    controller()->motionPool()[10].setTargetPos(angle10);
-//    controller()->motionPool()[11].setTargetPos(angle11);
-//    controller()->motionPool()[12].setTargetPos(angle12);
-//    controller()->motionPool()[13].setTargetPos(angle13);
-//    controller()->motionPool()[14].setTargetPos(angle14);
-//    controller()->motionPool()[15].setTargetPos(angle15);
-//    controller()->motionPool()[16].setTargetPos(angle16);
-//    controller()->motionPool()[17].setTargetPos(angle17);
+
 
 //    for(int i = 0;i<18;++i){
 //        double angle = begin_angle[i] + dir_ *  count() * 0.002;
@@ -243,29 +195,32 @@ auto DogMoveJoint::executeRT()->int
 
 //    }
 
-    //    controller()->motionPool()[1].setTargetPos(angle1);
+//    controller()->motionPool()[1].setTargetPos(angle1);
 //    lout() << angle0 << std::endl;
 //    mout() << angle0 << std::endl;
-    mout() << controller()->motionPool()[0].actualPos() <<std::endl;
+    //mout()输出在终端上
+    //lout()输出记录在文本中
+    //mout() << controller()->motionPool()[0].actualPos() <<std::endl; // 显示电机当前实际位置
 
-    //return 3600000-count();
-    return 10000-count();
+
+
+    return 10000-count(); //电机运行10s
 
 
 }
-auto DogMoveJoint::collectNrt()->void {}
-DogMoveJoint::DogMoveJoint(const std::string &name)
+auto MotorDrive::collectNrt()->void {}
+MotorDrive::MotorDrive(const std::string &name)
 {
     aris::core::fromXmlString(command(),
        "<Command name=\"test_mvj\">"
         "	<Param name=\"direction\" default=\"1\" abbreviation=\"d\"/>"
         "</Command>");
 }
-DogMoveJoint::~DogMoveJoint() = default;
+MotorDrive::~MotorDrive() = default;
 
 
 
-auto createControllerQuadruped()->std::unique_ptr<aris::control::Controller>
+auto createControllerMotor()->std::unique_ptr<aris::control::Controller>
 {
     std::unique_ptr<aris::control::Controller> controller(new aris::control::EthercatController);
 
@@ -283,35 +238,31 @@ auto createControllerQuadruped()->std::unique_ptr<aris::control::Controller>
 
         };
 #endif
-        double pos_factor[18]
+        double pos_factor[18] //偏置系数
         {
-//            262144.0 * 6 / 2 / PI, 262144.0 * 6 / 2 / PI, 262144.0 * 6 / 2 / PI,
-//            262144.0 * 6 / 2 / PI, 262144.0 * 6 / 2 / PI, 262144.0 * 6 / 2 / PI,
-//            262144.0 * 6 / 2 / PI, 262144.0 * 6 / 2 / PI, 262144.0 * 6 / 2 / PI,
-//            262144.0 * 6 / 2 / PI, 262144.0 * 6 / 2 / PI, 262144.0 * 6 / 2 / PI,
             4000/PI,4000/PI,4000/PI,4000/PI,4000/PI,4000/PI,
             4000/PI,4000/PI,4000/PI,4000/PI,4000/PI,4000/PI,
             4000/PI,4000/PI,4000/PI,4000/PI,4000/PI,4000/PI
         };
-        double max_pos[18]
+        double max_pos[18] //最大位置
         {
             50000*PI,500*PI,500*PI,500*PI,500*PI,500*PI,
             500*PI,500*PI,500*PI,500*PI,500*PI,500*PI,
             500*PI,500*PI,500*PI,500*PI,500*PI,500*PI
         };
-        double min_pos[18]
+        double min_pos[18] //最小位置
         {
             -50000*PI,-500*PI,-500*PI,-500*PI,-500*PI,-500*PI,
             -500*PI,-500*PI,-500*PI,-500*PI,-500*PI,-500*PI,
             -500*PI,-500*PI,-500*PI,-500*PI,-500*PI,-500*PI
         };
-        double max_vel[18]
+        double max_vel[18]  //最大速度
         {
             330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI,330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI,
             330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI,330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI,
             330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI,330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI
         };
-        double max_acc[18]
+        double max_acc[18]  //最大加速度
         {
             3000,  3000,  3000,3000,  3000,  3000,
             3000,  3000,  3000,3000,  3000,  3000,
@@ -372,7 +323,7 @@ auto createControllerQuadruped()->std::unique_ptr<aris::control::Controller>
     };
     return controller;
 }
-auto createPlanQuadruped()->std::unique_ptr<aris::plan::PlanRoot>
+auto createPlanMotor()->std::unique_ptr<aris::plan::PlanRoot>
 {
     std::unique_ptr<aris::plan::PlanRoot> plan_root(new aris::plan::PlanRoot);
 
@@ -392,14 +343,13 @@ auto createPlanQuadruped()->std::unique_ptr<aris::plan::PlanRoot>
 
     plan_root->planPool().add<aris::plan::MoveL>();
     plan_root->planPool().add<aris::plan::MoveJ>();
-
     plan_root->planPool().add<aris::plan::GetXml>();
     plan_root->planPool().add<aris::plan::SetXml>();
     plan_root->planPool().add<aris::plan::Start>();
     plan_root->planPool().add<aris::plan::Stop>();
 
     //自己写的命令
-    plan_root->planPool().add<DogMoveJoint>();
+    plan_root->planPool().add<MotorDrive>();
     plan_root->planPool().add<MoveJS>();
     return plan_root;
 }
