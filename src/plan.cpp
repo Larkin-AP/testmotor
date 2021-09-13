@@ -1,4 +1,3 @@
-
 #include"plan.h"
 #include<cmath>
 #include<iostream>
@@ -59,7 +58,7 @@ auto TCurve::getCurveParam()->void
 	}
 	else
 	{
-		//安速度计算，此时给定的加速度不起作用
+        //按速度计算，此时给定的加速度不起作用
 		this->Tc_ = 2.0 / v_;
 		this->a_ = v_ * v_;
 		this->v_ = v_;

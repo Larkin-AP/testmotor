@@ -25,7 +25,7 @@ auto MoveJS::prepareNrt()->void
 {
     MoveJSParam param;
 
-    param.j1 = 0.0;  //j1这个参数做什么用，当前位置？
+    param.j1 = 0.0;
     param.time = 0.0;
     param.timenum = 0;
 
@@ -52,16 +52,15 @@ auto MoveJS::prepareNrt()->void
             param.timenum = int32Param(p.first);
         }
     }
-    this->param() = param;  //这句是什么意思？？？
+    this->param() = param;
     std::vector<std::pair<std::string, std::any>> ret_value;
     for (auto &option : motorOptions())	option |= NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER|NOT_CHECK_POS_CONTINUOUS;
     ret() = ret_value;
 }
 auto MoveJS::executeRT()->int
 {
-
     auto &param = std::any_cast<MoveJSParam&>(this->param());
-    auto time = static_cast<int32_t>(param.time * 1000); //转换成32位ms吗？？？
+    auto time = static_cast<int32_t>(param.time * 1000);
     auto totaltime = static_cast<int32_t>(param.timenum * time);
     static double begin_pjs;
     static double step_pjs;
@@ -75,7 +74,6 @@ auto MoveJS::executeRT()->int
         {
             begin_pjs = controller()->motionPool()[0].actualPos();
             step_pjs = controller()->motionPool()[0].actualPos();
-            this->master()->logFileRawName("TestMotor");//建立记录数据的文件夹
         }
         step_pjs = begin_pjs + param.j1 * (1 - std::cos(2 * PI*count() / time)) / 2;
         controller()->motionPool().at(0).setTargetPos(step_pjs);
@@ -105,19 +103,16 @@ auto MoveJS::executeRT()->int
     }
 
     // 打印 //
-    if (count() % 10 == 0)
+    if (count() % 100 == 0)
     {
-        std::cout << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
-        std::cout << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
-        std::cout << std::endl;
+        cout << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
+        cout << std::endl;
     }
 
     // log //
-//    auto &lout = controller()->lout();
-//    lout << controller()->motionAtAbs(0).targetPos() << ",";
-//    lout << std::endl;
-    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
-    lout() << controller()->motionAtAbs(0).actualVel() <<std::endl;
+    auto &lout = controller()->lout();
+    lout << controller()->motionAtAbs(0).targetPos() << ",";
+    lout << std::endl;
 
     return totaltime - count();
 }
@@ -147,52 +142,82 @@ auto MotorDrive::prepareNrt()->void
             aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
 
 }
-auto MotorDrive::executeRT()->int //进入实时线程
+auto MotorDrive::executeRT()->int
 {
-    static double begin_angle[3];
+    static double begin_angle[18];
 
     if (count() == 1)
     {
-        begin_angle[0] = controller()->motionPool()[0].actualPos();
-        this->master()->logFileRawName("TestMotor");//建立记录数据的文件夹
-    }
 
+        begin_angle[0] = controller()->motionPool()[0].targetPos();
+
+
+
+//        for(int i = 0; i<18;++i){
+//            begin_angle[i] = controller()->motionPool()[i].targetPos();
+//        }
+
+        this->master()->logFileRawName("TestMotor");//建立文件夹
+    }
 //    std::int32_t digits;
 //    this->ecController()->motionPool()[0].readPdo(0x60fd, 0x00, digits);
 //    if(count()%200==0) mout() << std::hex << digits << std::endl;
 
 
+
+
 //  梯形曲线
-    //mout()函数输出在终端上
-    //lout()函数记录在文本中
-    TCurve s1(5,2);
+    TCurve s1(1,1);
     s1.getCurveParam();
-    double angle0 = begin_angle[0] + PI * dir_  * s1.getTCurve(count()) ;
-    controller()->motionPool()[0].setTargetPos(angle0);
-//    mout() << angle0 << std::endl;
-    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
-    lout() << controller()->motionAtAbs(0).actualVel() <<std::endl;
-    return s1.getTc() * 1000-count(); //运行时间为T型曲线的周期
+    double angle0 = begin_angle[0] + dir_ * 1 * s1.getTCurve(count());
+//    lout() << angle0 << std::endl;//将电机角度输出到文件
+
+//    controller()->motionPool()[0].setTargetPos(angle0);
+//    return s1.getTc() * 1000-count();
 
 //    Cos曲线
-//    double angle0 = begin_angle[0] + begin_angle[0] *dir_* (1 - std::cos(2 * PI*count() / 2000.0)) / 2;
+//    double angle0 = begin_angle[0] + dir_ * (1 - cos(PI * count()/1000.0))/2;
 //    controller()->motionPool()[0].setTargetPos(angle0);
-//    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
-//    lout() << controller()->motionAtAbs(0).actualVel() <<std::endl;
-//    return 2000-count(); //运行一个周期
+//    return 1000-count();
+
+//      Sin曲线
+//    double angle0 = begin_angle[0] + dir_ * 10*sin(PI * count()/15000.0);
+//    double angle0 = begin_angle[0] + dir_ * count() * 0.001;
+//    double angle0 = begin_angle[0] + dir_ * sin(PI * count()/2/1000.0);
+
+    controller()->motionPool()[0].setTargetPos(angle0);
+    int16_t vel;
+    ecController()->motionPool()[0].readPdo(0x606c,0x00,vel);
+    std::cout << vel <<std::endl;
+//    for(int i = 0;i<18;++i){
+//        double angle = begin_angle[i] + dir_ *  count() * 0.002;
+//        //double angle = begin_angle[i] + dir_ * 5* std::sin(PI * count()/2/1000.0);
+//        controller()->motionPool()[i].setTargetPos(angle);
+
+//    }
+
+//    controller()->motionPool()[1].setTargetPos(angle1);
+//    lout() << angle0 << std::endl;
+//    mout() << angle0 << std::endl;
+    //mout()输出在终端上
+    //lout()输出记录在文本中
+    //mout() << controller()->motionPool()[0].actualPos() <<std::endl; // 显示电机当前实际位置
+
+
+
+    return 1; //电机运行10s
 
 
 }
-
 auto MotorDrive::collectNrt()->void {}
-MotorDrive::MotorDrive(const std::string &name) //构造函数
+MotorDrive::MotorDrive(const std::string &name)
 {
     aris::core::fromXmlString(command(),
        "<Command name=\"test_mvj\">"
         "	<Param name=\"direction\" default=\"1\" abbreviation=\"d\"/>"
         "</Command>");
 }
-MotorDrive::~MotorDrive() = default;  //析构函数
+MotorDrive::~MotorDrive() = default;
 
 
 
@@ -214,28 +239,38 @@ auto createControllerMotor()->std::unique_ptr<aris::control::Controller>
 
         };
 #endif
-        double pos_factor[3] //偏置系数
+        double pos_factor[18] //偏置系数
         {
-            2000/PI,2000/PI,2000/PI
+            4000/PI,4000/PI,4000/PI,4000/PI,4000/PI,4000/PI,
+            4000/PI,4000/PI,4000/PI,4000/PI,4000/PI,4000/PI,
+            4000/PI,4000/PI,4000/PI,4000/PI,4000/PI,4000/PI
         };
-        double max_pos[3] //最大位置
+        double max_pos[18] //最大位置
         {
-            5000*PI,5000*PI,5000*PI
+            50000*PI,500*PI,500*PI,500*PI,500*PI,500*PI,
+            500*PI,500*PI,500*PI,500*PI,500*PI,500*PI,
+            500*PI,500*PI,500*PI,500*PI,500*PI,500*PI
         };
-        double min_pos[3] //最小位置
+        double min_pos[18] //最小位置
         {
-            -500*PI,-500*PI,-500*PI
+            -50000*PI,-500*PI,-500*PI,-500*PI,-500*PI,-500*PI,
+            -500*PI,-500*PI,-500*PI,-500*PI,-500*PI,-500*PI,
+            -500*PI,-500*PI,-500*PI,-500*PI,-500*PI,-500*PI
         };
-        double max_vel[3]  //最大速度
+        double max_vel[18]  //最大速度
         {
-            330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI
+            330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI,330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI,
+            330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI,330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI,
+            330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI,330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI
         };
-        double max_acc[3]  //最大加速度
+        double max_acc[18]  //最大加速度
         {
-            3000,  3000,  3000
+            3000,  3000,  3000,3000,  3000,  3000,
+            3000,  3000,  3000,3000,  3000,  3000,
+            3000,  3000,  3000,3000,  3000,  3000
         };
 
-        int phy_id[3]={0,1,2};
+        int phy_id[18]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17};
 
 
         std::string xml_str =
