@@ -29,9 +29,23 @@ namespace robot
           auto virtual executeRT()->int;
           auto virtual collectNrt()->void;
 
-          explicit MoveJS(const std::string &name = "MoveJS_plan");
+          explicit MoveJS(const std::string &name = "MoveJS_plan");//为什么这里没有析构函数
 
       };
+
+    class VelDrive : public aris::core::CloneObject<VelDrive,aris::plan::Plan>
+    {
+     public:
+        auto virtual prepareNrt()->void;
+        auto virtual executeRT()->int;
+        auto virtual collectNrt()->void;
+
+        virtual ~VelDrive();
+        explicit VelDrive(const std::string &name = "vel_drive");
+
+     private:
+        double dir_;
+    };
     
 
     auto createControllerMotor()->std::unique_ptr<aris::control::Controller>;

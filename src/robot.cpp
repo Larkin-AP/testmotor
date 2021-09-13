@@ -196,6 +196,43 @@ MotorDrive::~MotorDrive() = default;  //析构函数
 
 
 
+//  速度模式
+auto VelDrive::prepareNrt()->void{
+
+    dir_ = doubleParam("direction");
+
+    for(auto &m:motorOptions()) m =
+            aris::plan::Plan::NOT_CHECK_ENABLE |
+            aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
+}
+auto VelDrive::executeRT()->int{
+    static double begin_vel[3];
+
+    if (count()==1)
+    {
+        begin_vel[0] = controller()->motionPool()[0].actualVel();
+        this->master()->logFileRawName("TestVel");
+    }
+    double vel0= begin_vel[0]+30*(1-std::cos(2*PI*count()/2000.0))/2;
+    mout()<< vel0 << std::endl;
+    controller()->motionPool()[0].setTargetVel(vel0);
+   // mout() << controller()->motionAtAbs(0).actualVel()<< std::endl;
+    return 2000-count();
+}
+
+auto VelDrive::collectNrt()->void{}
+VelDrive::VelDrive(const std::string &name)
+{
+    aris::core::fromXmlString(command(),
+       "<Command name=\"test_vel\">"
+        "	<Param name=\"direction\" default=\"1\" abbreviation=\"d\"/>"
+        "</Command>");
+}
+VelDrive::~VelDrive() = default;  //析构函数
+
+
+
+
 auto createControllerMotor()->std::unique_ptr<aris::control::Controller>
 {
     std::unique_ptr<aris::control::Controller> controller(new aris::control::EthercatController);
@@ -250,7 +287,7 @@ auto createControllerMotor()->std::unique_ptr<aris::control::Controller>
             "		<SyncManager is_tx=\"false\">"
             "			<Pdo index=\"0x1600\" is_tx=\"false\">"
             "				<PdoEntry name=\"target_pos\" index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
-//            "				<PdoEntry name=\"target_vel\" index=\"0x60FF\" subindex=\"0x00\" size=\"32\"/>"
+            "				<PdoEntry name=\"target_vel\" index=\"0x60FF\" subindex=\"0x00\" size=\"32\"/>"
 //            "				<PdoEntry name=\"targer_toq\" index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
 //            "				<PdoEntry name=\"max_toq\" index=\"0x6072\" subindex=\"0x00\" size=\"16\"/>"
             "				<PdoEntry name=\"control_word\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
@@ -317,6 +354,7 @@ auto createPlanMotor()->std::unique_ptr<aris::plan::PlanRoot>
     //自己写的命令
     plan_root->planPool().add<MotorDrive>();
     plan_root->planPool().add<MoveJS>();
+    plan_root->planPool().add<VelDrive>();
     return plan_root;
 }
 
