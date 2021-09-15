@@ -1,2 +1,2 @@
 # testmotor
-The only code for hex I can use, so cherish!
+先进驱动课程学生调试代码
