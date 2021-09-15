@@ -25,7 +25,7 @@ auto MoveJS::prepareNrt()->void
 {
     MoveJSParam param;
 
-    param.j1 = 0.0;  //j1这个参数做什么用，当前位置？
+    param.j1 = 0.0;
     param.time = 0.0;
     param.timenum = 0;
 
@@ -52,7 +52,7 @@ auto MoveJS::prepareNrt()->void
             param.timenum = int32Param(p.first);
         }
     }
-    this->param() = param;  //这句是什么意思？？？
+    this->param() = param;
     std::vector<std::pair<std::string, std::any>> ret_value;
     for (auto &option : motorOptions())	option |= NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER|NOT_CHECK_POS_CONTINUOUS;
     ret() = ret_value;
@@ -61,7 +61,7 @@ auto MoveJS::executeRT()->int
 {
 
     auto &param = std::any_cast<MoveJSParam&>(this->param());
-    auto time = static_cast<int32_t>(param.time * 1000); //转换成32位ms吗？？？
+    auto time = static_cast<int32_t>(param.time * 1000);
     auto totaltime = static_cast<int32_t>(param.timenum * time);
     static double begin_pjs;
     static double step_pjs;
