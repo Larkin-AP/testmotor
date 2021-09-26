@@ -137,8 +137,8 @@ MoveJS::MoveJS(const std::string &name)
 
 
 
-//轴空间移动
-auto MotorDrive::prepareNrt()->void
+//Tcurve
+auto TcurveDrive::prepareNrt()->void
 {
     dir_ = doubleParam("direction");
 
@@ -147,7 +147,7 @@ auto MotorDrive::prepareNrt()->void
             aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
 
 }
-auto MotorDrive::executeRT()->int //进入实时线程
+auto TcurveDrive::executeRT()->int //进入实时线程
 {
     static double begin_angle[3];
 
@@ -161,11 +161,10 @@ auto MotorDrive::executeRT()->int //进入实时线程
 //    this->ecController()->motionPool()[0].readPdo(0x60fd, 0x00, digits);
 //    if(count()%200==0) mout() << std::hex << digits << std::endl;
 
-
 //  梯形曲线
     //mout()函数输出在终端上
     //lout()函数记录在文本中
-    TCurve s1(5,2);
+    TCurve s1(5,2); //s1(a,v)
     s1.getCurveParam();
     double angle0 = begin_angle[0] + PI * dir_  * s1.getTCurve(count()) ;
     controller()->motionPool()[0].setTargetPos(angle0);
@@ -173,26 +172,17 @@ auto MotorDrive::executeRT()->int //进入实时线程
     lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
     lout() << controller()->motionAtAbs(0).actualVel() <<std::endl;
     return s1.getTc() * 1000-count(); //运行时间为T型曲线的周期
-
-//    Cos曲线
-//    double angle0 = begin_angle[0] + begin_angle[0] *dir_* (1 - std::cos(2 * PI*count() / 2000.0)) / 2;
-//    controller()->motionPool()[0].setTargetPos(angle0);
-//    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
-//    lout() << controller()->motionAtAbs(0).actualVel() <<std::endl;
-//    return 2000-count(); //运行一个周期
-
-
 }
 
-auto MotorDrive::collectNrt()->void {}
-MotorDrive::MotorDrive(const std::string &name) //构造函数
+auto TcurveDrive::collectNrt()->void {}
+TcurveDrive::TcurveDrive(const std::string &name) //构造函数
 {
     aris::core::fromXmlString(command(),
        "<Command name=\"test_mvj\">"
         "	<Param name=\"direction\" default=\"1\" abbreviation=\"d\"/>"
         "</Command>");
 }
-MotorDrive::~MotorDrive() = default;  //析构函数
+TcurveDrive::~TcurveDrive() = default;  //析构函数
 
 
 
@@ -257,7 +247,7 @@ auto createControllerMotor()->std::unique_ptr<aris::control::Controller>
         };
         double max_pos[3] //最大位置
         {
-            5000*PI,5000*PI,5000*PI
+            500*PI,500*PI,500*PI
         };
         double min_pos[3] //最小位置
         {
@@ -352,7 +342,7 @@ auto createPlanMotor()->std::unique_ptr<aris::plan::PlanRoot>
     plan_root->planPool().add<aris::plan::Stop>();
 
     //自己写的命令
-    plan_root->planPool().add<MotorDrive>();
+    plan_root->planPool().add<TcurveDrive>();
     plan_root->planPool().add<MoveJS>();
     plan_root->planPool().add<VelDrive>();
     return plan_root;

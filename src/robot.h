@@ -7,15 +7,15 @@
 namespace robot
 {
 
-    class MotorDrive :public aris::core::CloneObject<MotorDrive,aris::plan::Plan>
+    class TcurveDrive :public aris::core::CloneObject<TcurveDrive,aris::plan::Plan>
     {
     public:
         auto virtual prepareNrt()->void;
         auto virtual executeRT()->int;
         auto virtual collectNrt()->void;
 
-        virtual ~MotorDrive();
-        explicit MotorDrive(const std::string &name = "motor_drive");
+        virtual ~TcurveDrive();
+        explicit TcurveDrive(const std::string &name = "motor_drive");
 
     private:
         double dir_;
@@ -29,7 +29,7 @@ namespace robot
           auto virtual executeRT()->int;
           auto virtual collectNrt()->void;
 
-          explicit MoveJS(const std::string &name = "MoveJS_plan");//为什么这里没有析构函数
+          explicit MoveJS(const std::string &name = "MoveJS_plan");
 
       };
 
