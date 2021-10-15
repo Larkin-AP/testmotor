@@ -75,7 +75,7 @@ auto MoveJS::executeRT()->int
         {
             begin_pjs = controller()->motionPool()[0].actualPos();
             step_pjs = controller()->motionPool()[0].actualPos();
-            this->master()->logFileRawName("TestMotor");//建立记录数据的文件夹
+            this->master()->logFileRawName("moveJS");//建立记录数据的文件夹
         }
         step_pjs = begin_pjs + param.j1 * (1 - std::cos(2 * PI*count() / time)) / 2;
         controller()->motionPool().at(0).setTargetPos(step_pjs);
@@ -107,9 +107,9 @@ auto MoveJS::executeRT()->int
     // 打印 //
     if (count() % 10 == 0)
     {
-        std::cout << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
-        std::cout << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
-        std::cout << std::endl;
+        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
+        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
+        mout() << std::endl;
     }
 
     // log //
@@ -140,12 +140,11 @@ MoveJS::MoveJS(const std::string &name)
 //Tcurve
 auto TcurveDrive::prepareNrt()->void
 {
-    dir_ = doubleParam("direction");
+    cef_ = doubleParam("coefficient");
 
     for(auto &m:motorOptions()) m =
             aris::plan::Plan::NOT_CHECK_ENABLE |
             aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
-
 }
 auto TcurveDrive::executeRT()->int //进入实时线程
 {
@@ -154,7 +153,7 @@ auto TcurveDrive::executeRT()->int //进入实时线程
     if (count() == 1)
     {
         begin_angle[0] = controller()->motionPool()[0].actualPos();
-        this->master()->logFileRawName("TestMotor");//建立记录数据的文件夹
+        this->master()->logFileRawName("TestMvj");//建立记录数据的文件夹
     }
 
 //    std::int32_t digits;
@@ -166,9 +165,16 @@ auto TcurveDrive::executeRT()->int //进入实时线程
     //lout()函数记录在文本中
     TCurve s1(5,2); //s1(a,v)
     s1.getCurveParam();
-    double angle0 = begin_angle[0] + PI * dir_  * s1.getTCurve(count()) ;
+    double angle0 = begin_angle[0] + PI * cef_  * s1.getTCurve(count()) ;
     controller()->motionPool()[0].setTargetPos(angle0);
-//    mout() << angle0 << std::endl;
+    // 打印 //
+    if (count() % 10 == 0)
+    {
+        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
+        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
+        mout() << std::endl;
+    }
+    //log//
     lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
     lout() << controller()->motionAtAbs(0).actualVel() <<std::endl;
     return s1.getTc() * 1000-count(); //运行时间为T型曲线的周期
@@ -179,7 +185,7 @@ TcurveDrive::TcurveDrive(const std::string &name) //构造函数
 {
     aris::core::fromXmlString(command(),
        "<Command name=\"test_mvj\">"
-        "	<Param name=\"direction\" default=\"1\" abbreviation=\"d\"/>"
+        "	<Param name=\"coefficient\" default=\"1\" abbreviation=\"k\"/>"
         "</Command>");
 }
 TcurveDrive::~TcurveDrive() = default;  //析构函数
@@ -189,7 +195,7 @@ TcurveDrive::~TcurveDrive() = default;  //析构函数
 //  速度模式
 auto VelDrive::prepareNrt()->void{
 
-    dir_ = doubleParam("direction");
+    cef_ = doubleParam("coefficient");
 
     for(auto &m:motorOptions()) m =
             aris::plan::Plan::NOT_CHECK_ENABLE |
@@ -203,10 +209,18 @@ auto VelDrive::executeRT()->int{
         begin_vel[0] = controller()->motionPool()[0].actualVel();
         this->master()->logFileRawName("TestVel");
     }
-    double vel0= begin_vel[0]+30*(1-std::cos(2*PI*count()/2000.0))/2;
-    mout()<< vel0 << std::endl;
+    double vel0= begin_vel[0]+cef_*5.0*(1-std::cos(2*PI*count()/2000.0))/2;
+    // 打印 //
+    if (count() % 10 == 0)
+    {
+        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
+        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
+        mout() << std::endl;
+    }
+    //log//
+    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
+    lout() << controller()->motionAtAbs(0).actualVel() <<std::endl;
     controller()->motionPool()[0].setTargetVel(vel0);
-   // mout() << controller()->motionAtAbs(0).actualVel()<< std::endl;
     return 2000-count();
 }
 
@@ -215,7 +229,7 @@ VelDrive::VelDrive(const std::string &name)
 {
     aris::core::fromXmlString(command(),
        "<Command name=\"test_vel\">"
-        "	<Param name=\"direction\" default=\"1\" abbreviation=\"d\"/>"
+        "	<Param name=\"coefficient\" default=\"1.0\" abbreviation=\"k\"/>"
         "</Command>");
 }
 VelDrive::~VelDrive() = default;  //析构函数

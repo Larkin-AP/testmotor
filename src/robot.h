@@ -18,7 +18,7 @@ namespace robot
         explicit TcurveDrive(const std::string &name = "motor_drive");
 
     private:
-        double dir_;
+        double cef_;
     };
 
 
@@ -44,9 +44,9 @@ namespace robot
         explicit VelDrive(const std::string &name = "vel_drive");
 
      private:
-        double dir_;
+        double cef_;
     };
-    
+
 
     auto createControllerMotor()->std::unique_ptr<aris::control::Controller>;
     auto createPlanMotor()->std::unique_ptr<aris::plan::PlanRoot>;
