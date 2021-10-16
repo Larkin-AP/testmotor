@@ -48,6 +48,38 @@ namespace robot
     };
 
 
+    class XYZmove : public aris::core::CloneObject<XYZmove,aris::plan::Plan>
+    {
+     public:
+        auto virtual prepareNrt()->void;
+        auto virtual executeRT()->int;
+        auto virtual collectNrt()->void;
+
+        virtual ~XYZmove();
+        explicit XYZmove(const std::string &name = "xyz_drive");
+
+     private:
+        double x_;
+        double y_;
+        double z_;
+    };
+
+    class ReadPos : public aris::core::CloneObject<ReadPos,aris::plan::Plan>
+    {
+     public:
+        auto virtual prepareNrt()->void;
+        auto virtual executeRT()->int;
+        auto virtual collectNrt()->void;
+
+        virtual ~ReadPos();
+        explicit ReadPos(const std::string &name = "read_pos");
+
+
+    };
+
+
+
+
     auto createControllerMotor()->std::unique_ptr<aris::control::Controller>;
     auto createPlanMotor()->std::unique_ptr<aris::plan::PlanRoot>;
 }

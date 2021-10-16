@@ -107,9 +107,8 @@ auto MoveJS::executeRT()->int
     // 打印 //
     if (count() % 10 == 0)
     {
-        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
-        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
-        mout() << std::endl;
+        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "\t";
+        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << std::endl;
     }
 
     // log //
@@ -170,9 +169,8 @@ auto TcurveDrive::executeRT()->int //进入实时线程
     // 打印 //
     if (count() % 10 == 0)
     {
-        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
-        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
-        mout() << std::endl;
+        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "\t";
+        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << std::endl;
     }
     //log//
     lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
@@ -213,9 +211,8 @@ auto VelDrive::executeRT()->int{
     // 打印 //
     if (count() % 10 == 0)
     {
-        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
-        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
-        mout() << std::endl;
+        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "\t";
+        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << std::endl;
     }
     //log//
     lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
@@ -235,13 +232,115 @@ VelDrive::VelDrive(const std::string &name)
 VelDrive::~VelDrive() = default;  //析构函数
 
 
+//XYZmove
+auto XYZmove::prepareNrt()->void
+{
+    x_ = doubleParam("MoveX");
+    y_ = doubleParam("MoveY");
+    z_ = doubleParam("MoveZ");
+
+    for(auto &m:motorOptions()) m =
+            aris::plan::Plan::NOT_CHECK_ENABLE |
+            aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
+}
+auto XYZmove::executeRT()->int //进入实时线程
+{
+    static double begin_angle[3]; //0,1,2->x,y,z
+
+    if (count() == 1)
+    {
+        begin_angle[0] = controller()->motionPool()[0].actualPos();//x
+        begin_angle[1] = controller()->motionPool()[1].actualPos();//y
+//        begin_angle[2] = controller()->motionPool()[2].actualPos();//z
+//        this->master()->logFileRawName("TestMvj");//建立记录数据的文件夹
+    }
+
+//    std::int32_t digits;
+//    this->ecController()->motionPool()[0].readPdo(0x60fd, 0x00, digits);
+//    if(count()%200==0) mout() << std::hex << digits << std::endl;
+
+//  梯形曲线
+    //mout()函数输出在终端上
+    //lout()函数记录在文本中
+    TCurve s1(5,2); //s1(a,v)
+    s1.getCurveParam();
+    double angle0 = begin_angle[0] + x_ /72 * 2 * PI * s1.getTCurve(count()) ;
+    double angle1 = begin_angle[1] + y_ /72 * 2 * PI * s1.getTCurve(count()) ;
+//    double angle2 = begin_angle[2] + z_ /72 * 2 * PI * s1.getTCurve(count()) ;
+    controller()->motionPool()[0].setTargetPos(angle0);
+    controller()->motionPool()[1].setTargetPos(angle1);
+  //  controller()->motionPool()[2].setTargetPos(angle2);
+    // 打印 //
+    if (count() % 10 == 0)
+    {
+        mout() << "x" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
+        mout() << "y" << ":" << controller()->motionAtAbs(1).actualPos() << "  ";
+//        mout() << "z" << ":" << controller()->motionAtAbs(2).actualPos() << "  ";
+        mout() << std::endl;
+    }
+    //log//
+//    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
+//    lout() << controller()->motionAtAbs(0).actualVel() <<std::endl;
+    return s1.getTc() * 1000-count(); //运行时间为T型曲线的周期
+}
+
+auto XYZmove::collectNrt()->void {}
+XYZmove::XYZmove(const std::string &name) //构造函数
+{
+    aris::core::fromXmlString(command(),
+      "<Command name=\"xyz\">"
+      "	<GroupParam>"
+      "		<Param name=\"MoveX\" default=\"0\" abbreviation=\"x\"/>"
+      "		<Param name=\"MoveY\" default=\"0\" abbreviation=\"y\"/>"
+      "		<Param name=\"MoveZ\" default=\"0\" abbreviation=\"z\"/>"
+      "	</GroupParam>"
+      "</Command>");
+}
+XYZmove::~XYZmove() = default;  //析构函数
+
+//ReadPos
+auto ReadPos::prepareNrt()->void
+{
+//    x_ = doubleParam("MoveX");
+//    y_ = doubleParam("MoveY");
+//    z_ = doubleParam("MoveZ");
+
+    for(auto &m:motorOptions()) m =
+            aris::plan::Plan::NOT_CHECK_ENABLE |
+            aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
+}
+auto ReadPos::executeRT()->int //进入实时线程
+{
+    //print actual Pos per 10 m second
+    if (count()%10==0){
+        mout() << controller()->motionAtAbs(0).actualPos() << "\t";
+        mout() << controller()->motionAtAbs(1).actualPos() << std::endl;
+    }
+    return 1000-count();
+}
+
+auto ReadPos::collectNrt()->void {}
+ReadPos::ReadPos(const std::string &name) //构造函数
+{
+    aris::core::fromXmlString(command(),
+      "<Command name=\"read\">"
+      "	<GroupParam>"
+      "		<Param name=\"MoveX\" default=\"0\" abbreviation=\"x\"/>"
+      "		<Param name=\"MoveY\" default=\"0\" abbreviation=\"y\"/>"
+      "		<Param name=\"MoveZ\" default=\"0\" abbreviation=\"z\"/>"
+      "	</GroupParam>"
+      "</Command>");
+}
+ReadPos::~ReadPos() = default;  //析构函数
+
+
 
 
 auto createControllerMotor()->std::unique_ptr<aris::control::Controller>
 {
     std::unique_ptr<aris::control::Controller> controller(new aris::control::EthercatController);
 
-    for (aris::Size i = 0; i < 1; ++i)
+    for (aris::Size i = 0; i < 2; ++i)
     {
 #ifdef ARIS_USE_ETHERCAT_SIMULATION
         double pos_offset[2]
@@ -269,7 +368,7 @@ auto createControllerMotor()->std::unique_ptr<aris::control::Controller>
         };
         double max_vel[3]  //最大速度
         {
-            330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI
+            500 / 60 * 2 * PI, 500 / 60 * 2 * PI,  330 / 60 * 2 * PI
         };
         double max_acc[3]  //最大加速度
         {
@@ -359,6 +458,8 @@ auto createPlanMotor()->std::unique_ptr<aris::plan::PlanRoot>
     plan_root->planPool().add<TcurveDrive>();
     plan_root->planPool().add<MoveJS>();
     plan_root->planPool().add<VelDrive>();
+    plan_root->planPool().add<XYZmove>();
+    plan_root->planPool().add<ReadPos>();
     return plan_root;
 }
 
