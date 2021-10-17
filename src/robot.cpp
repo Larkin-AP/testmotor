@@ -107,9 +107,8 @@ auto MoveJS::executeRT()->int
     // 打印 //
     if (count() % 10 == 0)
     {
-        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
-        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
-        mout() << std::endl;
+        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "\t";
+        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << std::endl;
     }
 
     // log //
@@ -170,9 +169,8 @@ auto TcurveDrive::executeRT()->int //进入实时线程
     // 打印 //
     if (count() % 10 == 0)
     {
-        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
-        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
-        mout() << std::endl;
+        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "\t";
+        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << std::endl;
     }
     //log//
     lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
@@ -213,9 +211,8 @@ auto VelDrive::executeRT()->int{
     // 打印 //
     if (count() % 10 == 0)
     {
-        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
-        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << "  ";
-        mout() << std::endl;
+        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "\t";
+        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << std::endl;
     }
     //log//
     lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
