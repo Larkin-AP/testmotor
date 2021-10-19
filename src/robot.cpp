@@ -14,7 +14,7 @@ namespace robot
 
 
 
-// 单关节正弦往复轨迹 //
+// ---------------------------单关节正弦往复轨迹 --------------------------------//
 struct MoveJSParam
 {
     double j1;
@@ -136,7 +136,7 @@ MoveJS::MoveJS(const std::string &name)
 
 
 
-//Tcurve
+//------------------------Tcurve--------------------------------//
 auto TcurveDrive::prepareNrt()->void
 {
     cef_ = doubleParam("coefficient");
@@ -190,7 +190,7 @@ TcurveDrive::~TcurveDrive() = default;  //析构函数
 
 
 
-//  速度模式
+// ------------------------ 速度模式-----------------------------//
 auto VelDrive::prepareNrt()->void{
 
     cef_ = doubleParam("coefficient");
@@ -232,7 +232,7 @@ VelDrive::VelDrive(const std::string &name)
 VelDrive::~VelDrive() = default;  //析构函数
 
 
-//XYZmove
+//-------------------------------XYZmove------------------------------//
 auto XYZmove::prepareNrt()->void
 {
     x_ = doubleParam("MoveX");
@@ -246,35 +246,29 @@ auto XYZmove::prepareNrt()->void
 auto XYZmove::executeRT()->int //进入实时线程
 {
     static double begin_angle[3]; //0,1,2->x,y,z
-
+    double angle[3];
     if (count() == 1)
     {
-        begin_angle[0] = controller()->motionPool()[0].actualPos();//x
-        begin_angle[1] = controller()->motionPool()[1].actualPos();//y
-//        begin_angle[2] = controller()->motionPool()[2].actualPos();//z
+        for (int i = 0; i<2; ++i){
+            begin_angle[i] = controller()->motionPool()[i].actualPos();
+        }
 //        this->master()->logFileRawName("TestMvj");//建立记录数据的文件夹
     }
 
-//    std::int32_t digits;
-//    this->ecController()->motionPool()[0].readPdo(0x60fd, 0x00, digits);
-//    if(count()%200==0) mout() << std::hex << digits << std::endl;
-
-//  梯形曲线
-    //mout()函数输出在终端上
-    //lout()函数记录在文本中
-    TCurve s1(5,2); //s1(a,v)
+    TCurve s1(0.5,0.5); //s1(a,v)
     s1.getCurveParam();
-    double angle0 = begin_angle[0] + x_ /72 * 2 * PI * s1.getTCurve(count()) ;
-    double angle1 = begin_angle[1] + y_ /72 * 2 * PI * s1.getTCurve(count()) ;
+    angle[0] = begin_angle[0] + x_ /72 * 2 * PI * s1.getTCurve(count()) ;
+    angle[1] = begin_angle[1] + y_ /72 * 2 * PI * s1.getTCurve(count()) ;
 //    double angle2 = begin_angle[2] + z_ /72 * 2 * PI * s1.getTCurve(count()) ;
-    controller()->motionPool()[0].setTargetPos(angle0);
-    controller()->motionPool()[1].setTargetPos(angle1);
-  //  controller()->motionPool()[2].setTargetPos(angle2);
+
+    for (int i = 0; i<2; ++i){
+        controller()->motionPool()[i].setTargetPos(angle[i]);
+    }
     // 打印 //
     if (count() % 10 == 0)
     {
-        mout() << "x" << ":" << controller()->motionAtAbs(0).actualPos() << "  ";
-        mout() << "y" << ":" << controller()->motionAtAbs(1).actualPos() << "  ";
+        mout() << "x" << ":" << controller()->motionAtAbs(0).actualPos()/2/PI*72 << "\t";
+        mout() << "y" << ":" << controller()->motionAtAbs(1).actualPos()/2/PI*72 << "\t";
 //        mout() << "z" << ":" << controller()->motionAtAbs(2).actualPos() << "  ";
         mout() << std::endl;
     }
@@ -298,25 +292,18 @@ XYZmove::XYZmove(const std::string &name) //构造函数
 }
 XYZmove::~XYZmove() = default;  //析构函数
 
-//ReadPos
+//-------------------------ReadPos----------------------------------//
 auto ReadPos::prepareNrt()->void
 {
-//    x_ = doubleParam("MoveX");
-//    y_ = doubleParam("MoveY");
-//    z_ = doubleParam("MoveZ");
-
     for(auto &m:motorOptions()) m =
             aris::plan::Plan::NOT_CHECK_ENABLE |
             aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
 }
 auto ReadPos::executeRT()->int //进入实时线程
 {
-    //print actual Pos per 10 m second
-    if (count()%10==0){
-        mout() << controller()->motionAtAbs(0).actualPos() << "\t";
-        mout() << controller()->motionAtAbs(1).actualPos() << std::endl;
-    }
-    return 1000-count();
+    mout() << "motor0 pos = " << controller()->motionAtAbs(0).actualPos() << "\t";
+    mout() << "motor1 pos = " << controller()->motionAtAbs(1).actualPos() << std::endl;
+    return 0;
 }
 
 auto ReadPos::collectNrt()->void {}
@@ -324,14 +311,304 @@ ReadPos::ReadPos(const std::string &name) //构造函数
 {
     aris::core::fromXmlString(command(),
       "<Command name=\"read\">"
-      "	<GroupParam>"
-      "		<Param name=\"MoveX\" default=\"0\" abbreviation=\"x\"/>"
-      "		<Param name=\"MoveY\" default=\"0\" abbreviation=\"y\"/>"
-      "		<Param name=\"MoveZ\" default=\"0\" abbreviation=\"z\"/>"
-      "	</GroupParam>"
       "</Command>");
 }
 ReadPos::~ReadPos() = default;  //析构函数
+
+
+
+//-----------------------------home------------------------------------//
+auto Home::prepareNrt()->void
+{
+
+    for(auto &m:motorOptions()) m =
+            aris::plan::Plan::NOT_CHECK_ENABLE |
+            aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
+}
+auto Home::executeRT()->int //进入实时线程
+{
+    static double begin_angle[3];
+
+    if (count() == 1)
+    {
+        begin_angle[0] = controller()->motionPool()[0].actualPos();
+        begin_angle[1] = controller()->motionPool()[1].actualPos();
+        this->master()->logFileRawName("Home");//建立记录数据的文件夹
+    }
+
+
+    TCurve s1(1,0.5); //s1(a,v)
+    s1.getCurveParam();
+    double angle0 = begin_angle[0] - begin_angle[0]  * s1.getTCurve(count()) ;
+    double angle1 = begin_angle[1] - begin_angle[1]  * s1.getTCurve(count()) ;
+    controller()->motionPool()[0].setTargetPos(angle0);
+    controller()->motionPool()[1].setTargetPos(angle1);
+    // 打印 //
+    if (count() % 10 == 0)
+    {
+        mout() << "motor0" << ":" << controller()->motionAtAbs(0).actualPos() << "\t";
+        mout() << "motor1" << ":" << controller()->motionAtAbs(0).actualPos() << std::endl;
+    }
+    //log//
+    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
+    lout() << controller()->motionAtAbs(0).actualPos() <<std::endl;
+    return s1.getTc() * 1000-count(); //运行时间为T型曲线的周期
+}
+
+auto Home::collectNrt()->void {}
+Home::Home(const std::string &name) //构造函数
+{
+    aris::core::fromXmlString(command(),
+       "<Command name=\"home\">"
+        "</Command>");
+}
+Home::~Home() = default;  //析构函数
+
+
+//--------------------------------home2--------------------------------//
+struct HomeParam
+{
+    uint32_t j[3];
+    uint32_t num[3];
+    double distance[3];
+    double rest[3];
+};
+auto Home2::prepareNrt()->void
+{
+    HomeParam param;
+    for (int i = 0; i<2; ++i){
+        param.j[i] = 0;
+        param.distance[i] = controller()->motionPool()[i].actualPos() /2 /PI * 72;
+        param.num[i] = param.distance[i] / 150;
+        param.rest[i] = param.distance[i] - 150*param.num[i];
+    }
+    this->param() = param;
+
+//    std::vector<std::pair<std::string, std::any>> ret_value;
+//    for (auto &option : motorOptions())	option |= NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER|NOT_CHECK_POS_CONTINUOUS;
+//    ret() = ret_value;
+
+    for(auto &m:motorOptions()) m =
+            aris::plan::Plan::NOT_CHECK_ENABLE |
+            aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
+}
+auto Home2::executeRT()->int //进入实时线程
+{
+    auto &param = std::any_cast<HomeParam&>(this->param());
+    auto num = *std::max_element(param.num,param.num+1);
+    static double current_distance[3]; //0,1,2->x,y,z
+    static double ActualPos[3];
+    double distance[3];
+    if (count() == 1)
+    {
+        for (int i = 0 ; i < 2 ; ++i){
+            ActualPos[i] = controller()->motionPool()[i].actualPos();
+            current_distance[i] = ActualPos[i] /2 /PI * 72;//x
+        }
+//        this->master()->logFileRawName("TestMvj");//建立记录数据的文件夹
+    }
+
+
+//  梯形曲线
+    //mout()函数输出在终端上
+    //lout()函数记录在文本中
+    TCurve s1(5,2); //s1(a,v)
+    s1.getCurveParam();
+    if (param.num[0] >0){
+        distance[0] = ActualPos[0] - 150/72*2*PI*s1.getTCurve(count() - param.j[0] * s1.getTc() * 1000);
+        param.j[0]++;
+        param.num[0]--;
+    }
+    else if (param.num[0] == 0 ){
+        distance[0] = ActualPos[0] - param.rest[0]/72*2*PI*s1.getTCurve(count() - param.j[0]*s1.getTc() * 1000);
+        param.num[0] --;
+    }
+    else{
+        distance[0] = 0;
+    }
+
+    if (param.num[1] >0){
+        distance[1] = ActualPos[1] - 150/72*2*PI*s1.getTCurve(count() - param.j[1] * s1.getTc() * 1000);
+        param.j[1]++;
+        param.num[1]--;
+    }
+    else if (param.num[1] == 0 ){
+        distance[1] = ActualPos[1] - param.rest[1]/72*2*PI*s1.getTCurve(count() - param.j[1]*s1.getTc() * 1000);
+        param.num[1]--;
+    }
+    else{
+        distance[1] = 0;
+    }
+
+    controller()->motionPool()[0].setTargetPos(distance[0]);
+    controller()->motionPool()[1].setTargetPos(distance[1]);
+  //  controller()->motionPool()[2].setTargetPos(angle2);
+    // 打印 //
+    if (count() % 10 == 0)
+    {
+        mout() << "x" << ":" << controller()->motionAtAbs(0).actualPos() << std::endl;
+//        mout() << "y" << ":" << controller()->motionAtAbs(1).actualPos() << "  ";
+//        mout() << "z" << ":" << controller()->motionAtAbs(2).actualPos() << "  ";
+//        mout() << std::endl;
+    }
+    //log//
+//    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
+//    lout() << controller()->motionAtAbs(0).actualVel() <<std::endl;
+    return num*s1.getTc() * 1000-count(); //运行时间为T型曲线的周期
+}
+auto Home2::collectNrt()->void {}
+Home2::Home2(const std::string &name) //构造函数
+{
+    aris::core::fromXmlString(command(),
+      "<Command name=\"home2\">"
+      "</Command>");
+}
+Home2::~Home2() = default;  //析构函数
+
+
+
+
+
+//--------------------------draw circle------------------------------//
+auto Circle::prepareNrt()->void
+{
+    r_ = doubleParam("radius");
+
+    for(auto &m:motorOptions()) m =
+            aris::plan::Plan::NOT_CHECK_ENABLE |
+            aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
+}
+auto Circle::executeRT()->int //进入实时线程
+{
+    TCurve s1(0.5,0.5);//s1(a,v)
+    s1.getCurveParam();
+    static double begin_angle[2];
+//    static int Tc = s1.getTc();
+//    auto time = static_cast<int32_t>(Tc * 1000);
+
+    if(count()==1)
+    {
+        begin_angle[0] =  controller()->motionPool()[0].actualPos();
+        begin_angle[1] =  controller()->motionPool()[1].actualPos();
+        this->master()->logFileRawName("Square");//建立记录数据的文件夹
+    }
+
+//    if (1<=count() && count() <= time){
+//        double angle0 = begin_angle[0] + len_ * s1.getTCurve(count()-0*time);
+//        controller()->motionPool()[0].setTargetPos(angle0);
+//     }
+//    else if (time < count() && count() <= 2 * time){
+//        double x = begin_angle[0] + len_ * std::cos(2 *PI * s1.getTCurve(count() - time));
+//        double y = begin_angle[1] + len_ * std::sin(2 *PI * s1.getTCurve(count() - time));
+//        controller()->motionPool()[0].setTargetPos(x);
+//        controller()->motionPool()[1].setTargetPos(y);
+//     }
+
+
+    double x = begin_angle[0] + r_ * (std::cos(2 *PI * s1.getTCurve(count())) - 1);
+    double y = begin_angle[1] + r_ * std::sin(2 *PI * s1.getTCurve(count()));
+
+    controller()->motionPool()[0].setTargetPos(x);
+    controller()->motionPool()[1].setTargetPos(y);
+
+    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
+    lout() << controller()->motionAtAbs(1).actualPos() <<std::endl;
+
+    return s1.getTc() * 1000 - count();
+}
+
+auto Circle::collectNrt()->void {}
+Circle::Circle(const std::string &name) //构造函数
+{
+    aris::core::fromXmlString(command(),
+       "<Command name=\"circle\">"
+       "		<Param name=\"radius\" default=\"5\" abbreviation=\"r\"/>"
+        "</Command>");
+}
+Circle::~Circle() = default;  //析构函数
+
+//--------------------------------draw square--------------------------------------//
+auto Square::prepareNrt()->void
+{
+    len_ = doubleParam("length");
+    wid_ = doubleParam("width");
+
+    for(auto &m:motorOptions()) m =
+            aris::plan::Plan::NOT_CHECK_ENABLE |
+            aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
+}
+auto Square::executeRT()->int //进入实时线程
+{
+    static double begin_angle[3];
+    static int Tc;
+    TCurve s1(0.5,0.5);//s1(a,v)
+    s1.getCurveParam();
+    Tc = s1.getTc();
+    auto time = static_cast<int32_t>(Tc * 1000);
+    if (1<=count() && count() <= time){
+        if (count() == 1){
+            begin_angle[0] = controller()->motionPool()[0].actualPos();
+            this->master()->logFileRawName("Square");//建立记录数据的文件夹
+        }
+        double angle0 = begin_angle[0]+wid_/2/72.0*2*PI*s1.getTCurve(count()-0*time);
+        controller()->motionPool()[0].setTargetPos(angle0);
+    }
+    else if (time < count() && count() <= time*2){
+        if (count() == time+1){
+            begin_angle[1] = controller()->motionPool()[1].actualPos();
+        }
+        double angle1 = begin_angle[1]+len_/72.0*2*PI*s1.getTCurve(count()-1*time);
+        controller()->motionPool()[1].setTargetPos(angle1);
+    }
+    else if (2*time < count() && count() <= time*3){
+        if (count() == 2*time+1){
+            begin_angle[0] = controller()->motionPool()[0].actualPos();
+        }
+        double angle0 = begin_angle[0]-wid_/72.0*2*PI*s1.getTCurve(count()-2*time);
+        controller()->motionPool()[0].setTargetPos(angle0);
+    }
+    else if (3*time < count() && count() <= time*4){
+        if (count() == 3*time+1){
+            begin_angle[1] = controller()->motionPool()[1].actualPos();
+        }
+        double angle1 = begin_angle[1]-len_/72.0*2*PI*s1.getTCurve(count()-3*time);
+        controller()->motionPool()[1].setTargetPos(angle1);
+    }
+    else if (4*time < count() && count() <=time *5){
+        if (count() == 4*time+1){
+            begin_angle[0] = controller()->motionPool()[0].actualPos();
+        }
+        double angle0 = begin_angle[0]+wid_/2/72.0*2*PI*s1.getTCurve(count()-4*time );
+        controller()->motionPool()[0].setTargetPos(angle0);
+    }
+
+
+//    // 打印 //
+//    if (count() % 10 == 0)
+//    {
+//        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "\t";
+//        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << std::endl;
+//    }
+//    //log//
+    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
+    lout() << controller()->motionAtAbs(1).actualPos() <<std::endl;
+    int ret=time*5 -count() +1 ;
+//    std::cout << "ret = " << ret << std::endl;
+    return ret; //运行时间为T型曲线的周期
+}
+
+auto Square::collectNrt()->void {}
+Square::Square(const std::string &name) //构造函数
+{
+    aris::core::fromXmlString(command(),
+          "<Command name=\"square\">"
+          "	<GroupParam>"
+          "		<Param name=\"length\" default=\"100\" abbreviation=\"l\"/>"
+          "		<Param name=\"width\" default=\"100\" abbreviation=\"w\"/>"
+          "	</GroupParam>"
+          "</Command>");
+}
+Square::~Square() = default;  //析构函数
 
 
 
@@ -368,7 +645,7 @@ auto createControllerMotor()->std::unique_ptr<aris::control::Controller>
         };
         double max_vel[3]  //最大速度
         {
-            500 / 60 * 2 * PI, 500 / 60 * 2 * PI,  330 / 60 * 2 * PI
+            330 / 60 * 2 * PI, 330 / 60 * 2 * PI,  330 / 60 * 2 * PI
         };
         double max_acc[3]  //最大加速度
         {
@@ -460,6 +737,10 @@ auto createPlanMotor()->std::unique_ptr<aris::plan::PlanRoot>
     plan_root->planPool().add<VelDrive>();
     plan_root->planPool().add<XYZmove>();
     plan_root->planPool().add<ReadPos>();
+    plan_root->planPool().add<Home>();
+    plan_root->planPool().add<Home2>();
+    plan_root->planPool().add<Square>();
+    plan_root->planPool().add<Circle>();
     return plan_root;
 }
 
