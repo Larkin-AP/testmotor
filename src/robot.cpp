@@ -234,8 +234,8 @@ VelDrive::~VelDrive() = default;  //析构函数
 //--------------------------------cos---------------------------------//
 auto Cos::prepareNrt()->void
 {
-    A_ = doubleParam("coefficient");
-    T_ = doubleParam("coefficient");
+    A_ = doubleParam("Amplitude");
+    T_ = doubleParam("Time");
 
     for(auto &m:motorOptions()) m =
             aris::plan::Plan::NOT_CHECK_ENABLE |
@@ -275,7 +275,7 @@ Cos::Cos(const std::string &name) //构造函数
         "	<GroupParam>"
         "	<Param name=\"Amplitude\" default=\"6.28\" abbreviation=\"A\"/>"
         "	<Param name=\"Time\" default=\"2\" abbreviation=\"T\"/>"
-        "	<GroupParam>"
+        "	</GroupParam>"
         "</Command>");
 }
 Cos::~Cos() = default;  //析构函数
