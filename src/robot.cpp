@@ -231,6 +231,55 @@ VelDrive::VelDrive(const std::string &name)
 }
 VelDrive::~VelDrive() = default;  //析构函数
 
+//--------------------------------cos---------------------------------//
+auto Cos::prepareNrt()->void
+{
+    A_ = doubleParam("coefficient");
+    T_ = doubleParam("coefficient");
+
+    for(auto &m:motorOptions()) m =
+            aris::plan::Plan::NOT_CHECK_ENABLE |
+            aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
+}
+auto Cos::executeRT()->int //进入实时线程
+{
+    static double begin_angle[3];
+    static int time;
+
+    if (count() == 1)
+    {
+        begin_angle[0] = controller()->motionPool()[0].actualPos();
+        time = static_cast<int32_t>(T_ * 1000);
+        this->master()->logFileRawName("Cos");//建立记录数据的文件夹
+    }
+
+    double angle0 = begin_angle[0] + A_ * (1 - std::cos(2 * PI*count() / time)) ;
+    controller()->motionPool()[0].setTargetPos(angle0);
+    // 打印 //
+    if (count() % 10 == 0)
+    {
+        mout() << "pos" << ":" << controller()->motionAtAbs(0).actualPos() << "\t";
+        mout() << "vel" << ":" << controller()->motionAtAbs(0).actualVel() << std::endl;
+    }
+    //log//
+    lout() << controller()->motionAtAbs(0).actualPos() <<"\t";
+    lout() << controller()->motionAtAbs(0).actualVel() <<std::endl;
+    return time-count();
+}
+
+auto Cos::collectNrt()->void {}
+Cos::Cos(const std::string &name) //构造函数
+{
+    aris::core::fromXmlString(command(),
+       "<Command name=\"cos\">"
+        "	<GroupParam>"
+        "	<Param name=\"Amplitude\" default=\"6.28\" abbreviation=\"A\"/>"
+        "	<Param name=\"Time\" default=\"2\" abbreviation=\"T\"/>"
+        "	<GroupParam>"
+        "</Command>");
+}
+Cos::~Cos() = default;  //析构函数
+
 
 //-------------------------------XYZmove------------------------------//
 auto XYZmove::prepareNrt()->void
@@ -617,7 +666,7 @@ auto createControllerMotor()->std::unique_ptr<aris::control::Controller>
 {
     std::unique_ptr<aris::control::Controller> controller(new aris::control::EthercatController);
 
-    for (aris::Size i = 0; i < 2; ++i)
+    for (aris::Size i = 0; i < 1; ++i)
     {
 #ifdef ARIS_USE_ETHERCAT_SIMULATION
         double pos_offset[2]
@@ -735,6 +784,7 @@ auto createPlanMotor()->std::unique_ptr<aris::plan::PlanRoot>
     plan_root->planPool().add<TcurveDrive>();
     plan_root->planPool().add<MoveJS>();
     plan_root->planPool().add<VelDrive>();
+    plan_root->planPool().add<Cos>();
     plan_root->planPool().add<XYZmove>();
     plan_root->planPool().add<ReadPos>();
     plan_root->planPool().add<Home>();

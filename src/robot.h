@@ -47,6 +47,22 @@ namespace robot
         double cef_;
     };
 
+    class Cos : public aris::core::CloneObject<Cos,aris::plan::Plan>
+    {
+     public:
+        auto virtual prepareNrt()->void;
+        auto virtual executeRT()->int;
+        auto virtual collectNrt()->void;
+
+        virtual ~Cos();
+        explicit Cos(const std::string &name = "cos_drive");
+
+     private:
+        double A_;
+        double T_;
+    };
+
+
 
     class XYZmove : public aris::core::CloneObject<XYZmove,aris::plan::Plan>
     {
